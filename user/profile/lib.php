@@ -206,22 +206,14 @@ class profile_field_base {
      * Validate the form field from profile page
      *
      * @param stdClass $usernew
-     * @return  string  contains error message otherwise null
+     * @return  array  contains error message otherwise null
      */
     public function edit_validate_field($usernew) {
         global $DB;
 
         $errors = array();
         // Get input value.
-        if (isset($usernew->{$this->inputname})) {
-            if (is_array($usernew->{$this->inputname}) && isset($usernew->{$this->inputname}['text'])) {
-                $value = $usernew->{$this->inputname}['text'];
-            } else {
-                $value = $usernew->{$this->inputname};
-            }
-        } else {
-            $value = '';
-        }
+        $value = $this->get_field_value($usernew);
 
         // Check for uniqueness of data if required.
         if ($this->is_unique() && (($value !== '') || $this->is_required())) {
@@ -543,6 +535,54 @@ class profile_field_base {
      */
     public function get_field_properties() {
         return array(PARAM_RAW, NULL_NOT_ALLOWED);
+    }
+
+    /**
+     * Get field value.
+     *
+     * @param stdClass $usernew
+     * @return mixed|string
+     */
+    public function get_field_value(stdClass $usernew) {
+        if (isset($usernew->{$this->inputname})) {
+            if (is_array($usernew->{$this->inputname}) && isset($usernew->{$this->inputname}['text'])) {
+                $value = $usernew->{$this->inputname}['text'];
+            } else {
+                $value = $usernew->{$this->inputname};
+            }
+        } else {
+            $value = '';
+        }
+        return $value;
+    }
+
+    /**
+     * Get the parameters from the specified value.
+     *
+     * The expected default parameter format is:
+     * param1=value1;param2=value2 ...
+     *
+     * @param string $paramvalue
+     * @param string $paramseparator
+     * @param string $valueseparator
+     * @return array
+     */
+    public static function get_parameters(string $paramvalue, string $paramseparator = ';', string $valueseparator = '='): array {
+        $params = array();
+
+        if (!empty($paramvalue)) {
+            $lines = explode($paramseparator, $paramvalue);
+            foreach ($lines as $line) {
+                if (!empty($line)) {
+                    $values = explode($valueseparator, $line);
+                    if (isset($values[0])) {
+                        $params[$values[0]] = $values[1];
+                    }
+                }
+            }
+        }
+
+        return $params;
     }
 }
 

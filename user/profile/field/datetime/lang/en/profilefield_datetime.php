@@ -36,3 +36,4 @@ $string['specifydatedefault'] = 'or specify a date';
 $string['startyearafterend'] = 'The start year can\'t occur after the end year';
 $string['startyear'] = 'Start year';
 $string['wanttime'] = 'Include time?';
+$string['invalidminimumvalue'] = 'Invalid minimum value';
