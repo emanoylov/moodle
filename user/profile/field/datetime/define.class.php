@@ -58,6 +58,11 @@ class profile_define_datetime extends profile_define_base {
         $form->addElement('checkbox', 'param3', get_string('wanttime', 'profilefield_datetime'));
         $form->setType('param3', PARAM_INT);
 
+        // Param 4 for data validation.
+        $form->addElement('textarea', 'param4', get_string('datavalidation', 'profilefield_datetime'), array('rows' => 5, 'cols' => 60));
+        $form->setType('param4', PARAM_TEXT);
+        $form->addHelpButton('param4', 'datavalidation', 'profilefield_datetime');
+
         $form->addElement('hidden', 'startday', '1');
         $form->setType('startday', PARAM_INT);
         $form->addElement('hidden', 'startmonth', '1');
@@ -170,6 +175,8 @@ class profile_define_datetime extends profile_define_base {
         if (empty($data->param3)) {
             $data->param3 = null;
         }
+
+        $data->param4 = !empty($data->param4) ? trim($data->param4) : null;
 
         // No valid value in the default data column needed.
         $data->defaultdata = '0';

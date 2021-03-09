@@ -36,3 +36,7 @@ $string['specifydatedefault'] = 'or specify a date';
 $string['startyearafterend'] = 'The start year can\'t occur after the end year';
 $string['startyear'] = 'Start year';
 $string['wanttime'] = 'Include time?';
+$string['invalidminimumvalue'] = 'Invalid minimum value';
+$string['datavalidation'] = 'Data validation parameters';
+$string['datavalidation_help'] = '* Minimum datetime validation with parameters minimumdatetime and minimumdatetimeerror. Example:<br/> 
+minimumdatetime=18 years;minimumdatetimeerror=Date must be 18 years or more';
