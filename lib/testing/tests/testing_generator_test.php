@@ -506,20 +506,27 @@ class testing_generator_test extends \advanced_testcase {
         $this->resetAfterTest();
         $generator = $this->getDataGenerator();
 
-        // Insert first category without specified sortorder.
+        // Insert first category without specified name and sortorder.
+        $result = $generator->create_custom_profile_field_category();
+        $record = $DB->get_record('user_info_category', ['name' => 'Test category 1']);
+        $this->assertEquals($record->id, $result->id);
+        $this->assertEquals($record->name, $result->name);
+        $this->assertEquals($record->sortorder, $result->sortorder);
+
+        // Insert next category without specified sortorder.
         $result = $generator->create_custom_profile_field_category(['name' => 'Frogs']);
         $record = $DB->get_record('user_info_category', ['name' => 'Frogs']);
-        $this->assertEquals(1, $record->sortorder);
+        $this->assertEquals(2, $record->sortorder);
 
         // Also check the return value.
-        $this->assertEquals(1, $result->sortorder);
+        $this->assertEquals(2, $result->sortorder);
         $this->assertEquals('Frogs', $result->name);
         $this->assertEquals($record->id, $result->id);
 
         // Insert next category without specified sortorder.
         $generator->create_custom_profile_field_category(['name' => 'Zombies']);
         $record = $DB->get_record('user_info_category', ['name' => 'Zombies']);
-        $this->assertEquals(2, $record->sortorder);
+        $this->assertEquals(3, $record->sortorder);
 
         // Insert category with specified sortorder.
         $generator->create_custom_profile_field_category(['name' => 'Toads', 'sortorder' => 9]);

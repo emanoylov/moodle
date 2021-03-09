@@ -1369,13 +1369,18 @@ EOD;
     /**
      * Create a new category for custom profile fields.
      *
-     * @param array $data Array with 'name' and optionally 'sortorder'
+     * @param array $data Array with optional 'name' and 'sortorder'
      * @return \stdClass New category object
      */
-    public function create_custom_profile_field_category(array $data): \stdClass {
+    public function create_custom_profile_field_category(array $data = []): \stdClass {
         global $DB;
 
-        // Pick next sortorder if not defined.
+        // Set next name if not defined.
+        if (!array_key_exists('name', $data)) {
+            $id = $DB->count_records('user_info_category') + 1;
+            $data['name'] = "Test category $id";
+        }
+        // Set next sortorder if not defined.
         if (!array_key_exists('sortorder', $data)) {
             $data['sortorder'] = (int)$DB->get_field_sql('SELECT MAX(sortorder) FROM {user_info_category}') + 1;
         }

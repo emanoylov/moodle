@@ -125,6 +125,57 @@ class profile_field_datetime extends profile_field_base {
     }
 
     /**
+     * Validate the form field from profile page
+     *
+     * @param stdClass $usernew
+     * @return  array  contains error message otherwise null
+     */
+    public function edit_validate_field($usernew) {
+        $errors = parent::edit_validate_field($usernew);
+        $errors += $this->edit_validate_field_param4($usernew);
+        return $errors;
+    }
+
+    /**
+     * Validate the form field from profile page for the param4 field.
+     *
+     * @param stdClass $usernew
+     * @return array contains error messages
+     */
+    protected function edit_validate_field_param4($usernew) : array {
+        // Get the parameters from the param4 field.
+        // The expected parameter format is:
+        // param1=value1;param2=value2 ...
+        $params = profile_get_parameters($this->field->param4);
+        if (empty($params)) {
+            return [];
+        }
+
+        $errors = [];
+        $value = $this->get_field_value($usernew);
+
+        // Validate minimumdate.
+        // Expected parameters:
+        // minimumdate - the minimum date to enforce e.g. 18 years
+        // minimumdateerror - the error to show if minimumdate is not valid.
+        if (isset($params['minimumdate']) && !empty($params['minimumdate'])) {
+            $today = strtotime('today');
+            $minvalue = strtotime($params['minimumdate'], $value);
+
+            if ($minvalue > $today) {
+                if (isset($params['minimumdateerror']) && !empty($params['minimumdateerror'])) {
+                    $error = $params['minimumdateerror'];
+                } else {
+                    $error = get_string('minimumdateinvalid', 'profilefield_datetime');
+                }
+                $errors[$this->inputname] = $error;
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
      * Return the field type and null properties.
      * This will be used for validating the data submitted by a user.
      *

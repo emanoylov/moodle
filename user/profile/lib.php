@@ -47,6 +47,21 @@ define('PROFILE_VISIBLE_PRIVATE', '1');
  */
 define('PROFILE_VISIBLE_NONE', '0');
 
+/** Data validation for minutes. */
+define('PROFILE_VALIDATION_MINUTES', 'minutes');
+
+/** Data validation for hours. */
+define('PROFILE_VALIDATION_HOURS', 'hours');
+
+/** Data validation for days. */
+define('PROFILE_VALIDATION_DAYS', 'days');
+
+/** Data validation for months. */
+define('PROFILE_VALIDATION_MONTHS', 'months');
+
+/** Data validation for years. */
+define('PROFILE_VALIDATION_YEARS', 'years');
+
 /**
  * Base class for the customisable profile fields.
  *
@@ -219,15 +234,7 @@ class profile_field_base {
 
         $errors = array();
         // Get input value.
-        if (isset($usernew->{$this->inputname})) {
-            if (is_array($usernew->{$this->inputname}) && isset($usernew->{$this->inputname}['text'])) {
-                $value = $usernew->{$this->inputname}['text'];
-            } else {
-                $value = $usernew->{$this->inputname};
-            }
-        } else {
-            $value = '';
-        }
+        $value = $this->get_field_value($usernew);
 
         // Check for uniqueness of data if required.
         if ($this->is_unique() && (($value !== '') || $this->is_required())) {
@@ -604,6 +611,25 @@ class profile_field_base {
      */
     public function is_transform_supported(): bool {
         return false;
+    }
+
+    /**
+     * Get field value.
+     *
+     * @param stdClass $usernew
+     * @return mixed|string
+     */
+    public function get_field_value(stdClass $usernew) {
+        if (isset($usernew->{$this->inputname})) {
+            if (is_array($usernew->{$this->inputname}) && isset($usernew->{$this->inputname}['text'])) {
+                $value = $usernew->{$this->inputname}['text'];
+            } else {
+                $value = $usernew->{$this->inputname};
+            }
+        } else {
+            $value = '';
+        }
+        return $value;
     }
 }
 
@@ -1001,4 +1027,33 @@ function get_profile_field_list(): array {
         }
     }
     return $data;
+}
+
+/**
+ * Get the parameters from the specified value.
+ *
+ * The expected default parameter format is:
+ * param1=value1;param2=value2 ...
+ *
+ * @param string/mixed $paramvalue
+ * @param string $paramseparator
+ * @param string $valueseparator
+ * @return array
+ */
+function profile_get_parameters($paramvalue, string $paramseparator = ';', string $valueseparator = '='): array {
+    $params = array();
+
+    if (!empty($paramvalue)) {
+        $lines = explode($paramseparator, $paramvalue);
+        foreach ($lines as $line) {
+            if (!empty($line)) {
+                $values = explode($valueseparator, $line);
+                if (isset($values[0])) {
+                    $params[$values[0]] = $values[1];
+                }
+            }
+        }
+    }
+
+    return $params;
 }

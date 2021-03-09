@@ -58,6 +58,48 @@ class profile_define_datetime extends profile_define_base {
         $form->addElement('checkbox', 'param3', get_string('wanttime', 'profilefield_datetime'));
         $form->setType('param3', PARAM_INT);
 
+        // Add elements for data validation (param4).
+        $elements = array();
+        $elements[] =& $form->createElement('text', 'minimumdate', '', 'maxlength="5" size="5"');
+
+        $options = array();
+        $options[PROFILE_VALIDATION_MINUTES] = get_string('minimumdateminutes', 'profilefield_datetime');
+        $options[PROFILE_VALIDATION_HOURS] = get_string('minimumdatehours', 'profilefield_datetime');
+        $options[PROFILE_VALIDATION_DAYS] = get_string('minimumdatedays', 'profilefield_datetime');
+        $options[PROFILE_VALIDATION_MONTHS] = get_string('minimumdatemonths', 'profilefield_datetime');
+        $options[PROFILE_VALIDATION_YEARS] = get_string('minimumdateyears', 'profilefield_datetime');
+
+        $elements[] =& $form->createElement('select', 'minimumdateperiod', '', $options);
+
+        $elements[] =& $form->createElement('advcheckbox', 'minimumdateenabled', '',
+                get_string('minimumdateenabled', 'profilefield_datetime'));
+
+        $form->addGroup($elements, 'minimumdategroup',
+                get_string('minimumdate', 'profilefield_datetime'), '&nbsp;&nbsp;', false);
+        $form->addHelpButton('minimumdategroup', 'minimumdate', 'profilefield_datetime');
+
+        $minimumdatecallback = function($value) {
+            return !empty($value) && is_numeric($value) && $value > 0;
+        };
+
+        $form->addGroupRule('minimumdategroup',
+                ['minimumdate' => [
+                        [get_string('minimumdaterequired', 'profilefield_datetime'),
+                        'callback', $minimumdatecallback, 'server']
+                ]]);
+
+        $form->setType('minimumdateenabled', PARAM_INT);
+        $form->setType('minimumdate', PARAM_INT);
+        $form->setDefault('minimumdateperiod', PROFILE_VALIDATION_YEARS);
+
+        $form->addElement('text', 'minimumdateerror',
+                get_string('minimumdateerror', 'profilefield_datetime'), 'maxlength="40" size="40"');
+        $form->setType('minimumdateerror', PARAM_TEXT);
+
+        $form->disabledIf('minimumdate', 'minimumdateenabled', 'notchecked');
+        $form->disabledIf('minimumdateperiod', 'minimumdateenabled', 'notchecked');
+        $form->disabledIf('minimumdateerror', 'minimumdateenabled', 'notchecked');
+
         $form->addElement('hidden', 'startday', '1');
         $form->setType('startday', PARAM_INT);
         $form->addElement('hidden', 'startmonth', '1');
@@ -100,6 +142,8 @@ class profile_define_datetime extends profile_define_base {
     public function define_after_data(&$mform) {
         global $DB;
 
+        $this->define_after_data_param4($mform);
+
         // If we are adding a new profile field then the dates have already been set
         // by setDefault to the correct dates in the used calendar system. We only want
         // to execute the rest of the code when we have the years in the DB saved in
@@ -140,6 +184,56 @@ class profile_define_datetime extends profile_define_base {
     }
 
     /**
+     * Alter form based on submitted or existing data for the param4 field.
+     *
+     * @param moodleform $mform
+     */
+    public function define_after_data_param4(&$mform) {
+        // Get the parameters from the param4 field.
+        // The expected parameter format is:
+        // param1=value1;param2=value2 ...
+        if (!isset($mform->_defaultValues['param4']) ||
+                empty($params = profile_get_parameters($mform->_defaultValues['param4']))) {
+            return;
+        }
+
+        // Load minimumdate to the form if present.
+        if (isset($params['minimumdate'])) {
+            $values = explode(' ', $params['minimumdate']);
+            $applicable = false;
+            $applicableelem = null;
+            $group = $mform->getElement('minimumdategroup');
+            $elements =& $group->getElements();
+            foreach ($elements as $elem) {
+                $name = $elem->getName();
+                if ($name == 'minimumdate') {
+                    if (isset($values[0])) {
+                        $applicable = true;
+                        $elem->setValue($values[0]);
+                    }
+                } else if ($name == 'minimumdateperiod') {
+                    if (isset($values[1])) {
+                        $applicable = true;
+                        $elem->setValue($values[1]);
+                    }
+                } else if ($name == 'minimumdateenabled') {
+                    $applicableelem = $elem;
+                }
+            }
+
+            if ($applicable && $applicableelem) {
+                $applicableelem->setValue(1);
+            }
+        }
+
+        // Load minimumdateerror to the form if present.
+        if (isset($params['minimumdateerror'])) {
+            $param = $mform->getElement('minimumdateerror');
+            $param->setValue($params['minimumdateerror']);
+        }
+    }
+
+    /**
      * Preprocess data from the profile field form before
      * it is saved.
      *
@@ -170,6 +264,15 @@ class profile_define_datetime extends profile_define_base {
         if (empty($data->param3)) {
             $data->param3 = null;
         }
+
+        // Data validation (param4).
+        $param4 = null;
+        if (isset($data->minimumdateenabled) && $data->minimumdateenabled) {
+            $data->minimumdateerror = trim($data->minimumdateerror);
+            $param4 = "minimumdate={$data->minimumdate} {$data->minimumdateperiod};" .
+                    "minimumdateerror={$data->minimumdateerror}";
+        }
+        $data->param4 = $param4;
 
         // No valid value in the default data column needed.
         $data->defaultdata = '0';
