@@ -125,6 +125,48 @@ class profile_field_datetime extends profile_field_base {
     }
 
     /**
+     * Validate the form field from profile page
+     *
+     * @param stdClass $usernew
+     * @return  array  contains error message otherwise null
+     */
+    public function edit_validate_field($usernew) {
+        global $DB;
+
+        $errors = parent::edit_validate_field($usernew);
+
+        // Get the parameters from the param4 field.
+        // The expected parameter format is:
+        // param1=value1;param2=value2 ...
+        $params = self::get_parameters($this->field->param4);
+        if (empty($params)) {
+            return $errors;
+        }
+
+        $value = $this->get_field_value($usernew);
+
+        // Validate minimumdatetime.
+        // Expected parameters:
+        // minimumdatetime - the minimum datetime to enforce e.g. 18 years
+        // minimumdatetimeerror - the error to show if minimumdatetime is not valid.
+        if (isset($params['minimumdatetime']) && !empty($params['minimumdatetime'])) {
+            $today = strtotime('today');
+            $minvalue = strtotime($params['minimumdatetime'], $value);
+
+            if ($minvalue > $today) {
+                if (isset($params['minimumdatetimeerror']) && !empty($params['minimumdatetimeerror'])) {
+                    $error = $params['minimumdatetimeerror'];
+                } else {
+                    $error = get_string('invalidminimumvalue', 'profilefield_datetime');
+                }
+                $errors[$this->inputname] = $error;
+            }
+        }
+
+        return $errors;
+    }
+
+    /**
      * Return the field type and null properties.
      * This will be used for validating the data submitted by a user.
      *
