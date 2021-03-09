@@ -1227,4 +1227,31 @@ EOD;
 
         return $DB->get_record('user_lastaccess', ['id' => $recordid], '*', MUST_EXIST);
     }
+
+    /**
+     * Create a new profile field category.
+     *
+     * @param   string  $name The category name
+     * @param   int     $sortorder The category sortorder
+     * @return  int     The category id
+     */
+    public function create_profile_field_category(string $name = '', int $sortorder = -1): int {
+        global $DB;
+
+        if (empty($name) || $sortorder == -1) {
+            $id = $DB->count_records('user_info_category') + 1;
+
+            if (empty($name)) {
+                $name = "Test category $id";
+            }
+            if ($sortorder == -1) {
+                $sortorder = $id;
+            }
+        }
+
+        return $DB->insert_record('user_info_category', [
+                'name' => $name,
+                'sortorder' => $sortorder,
+        ]);
+    }
 }
